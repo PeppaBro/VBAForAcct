@@ -109,6 +109,7 @@ Public Function CodeStr(FuncName As String, ArrCode As String, ArrName As String
     For i = 0 To U
         CodeStr = CodeStr & Indent(1) & ArrCode & "(" & i & ") = " & Chr(34) & rst(0, i) & Chr(34) & ":" & ArrName & "(" & i & ") = " & Chr(34) & rst(1, i) & Chr(34) & vbCrLf
     Next
+    CodeStr = CodeStr & Indent(1) & "If Str = " & Chr(34) & Chr(34) & "Then " & FuncName & " = " & Chr(34) & Chr(34) & " : Exit Function" & vbCrLf
     CodeStr = CodeStr & Indent(1) & "If IsNumeric(Str) Then" & vbCrLf
     CodeStr = CodeStr & Indent(2) & "If IsInArray(Str, " & ArrCode & ") Then " & FuncName & " = " & ArrName & "(ArrIdx(Str, " & ArrCode & ")): Exit Function" & vbCrLf
     CodeStr = CodeStr & Indent(1) & "Else" & vbCrLf
