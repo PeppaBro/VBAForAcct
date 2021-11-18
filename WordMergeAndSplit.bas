@@ -116,6 +116,7 @@ Dim RREs As Long
     RStr = "C:\Program Files\WinRAR\WinRAR.exe  a -ep1 " & Mypath & Format(Date, "YYMMDD") & "\" & Subname & ".rar" & " " & Mypath & Format(Date, "YYMMDD") & "\" & Subname & "\*.*"
     RREs = Shell(RStr, vbHide)
 End Sub
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Sub 保越分割PDF()
     Dim NewDocName$, SubName$, CoName$, ContrNum$, tPage%, MyPath$, i%, RarStr$, RarRlt&, EplRlt&
     Dim SrcDoc As Document, NewDoc As Document
@@ -183,4 +184,33 @@ Sub 保越分割PDF()
     EplRlt = Shell("explorer.exe /n, /e," & MyPath & Format(Date, "YYMMDD") & "\" & SubName, vbNormalFocus)
     If Word.Application.Windows.Count = 0 Then Application.Quit
 End Sub
-
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Sub 提货委托书()
+Dim myMerge As MailMerge, I As Integer, myname As String, Mypath As String
+Application.ScreenUpdating = False
+Mypath = ActiveDocument.Path & "\"
+If Dir(Mypath & "合同及收货证明" & Format(Date, "YYMMDD"), vbDirectory) <> "" Then
+   Else
+       MkDir Mypath & "合同及收货证明" & Format(Date, "YYMMDD")
+ End If
+Set myMerge = ActiveDocument.MailMerge
+With myMerge.DataSource
+    If .Parent.State = wdMainAndDataSource Then
+        .ActiveRecord = wdFirstRecord
+        For I = 1 To .RecordCount
+            .FirstRecord = I
+            .LastRecord = I
+            .Parent.Destination = wdSendToNewDocument
+            myname = .DataFields(4).Value & "-" & .DataFields(2).Value 
+            .ActiveRecord = wdNextRecord
+            .Parent.Execute  '每次合并一个数据记录
+           With ActiveDocument
+                .Content.Characters.Last.Previous.Delete  '删除分节符
+                .SaveAs Filename:=Mypath & "合同及收货证明" & Format(Date, "YYMMDD") & "\" & myname & ".pdf", FileFormat:=wdFormatPDF
+                .Close wdDoNotSaveChanges
+            End With
+        Next
+    End If
+End With
+Application.ScreenUpdating = True
+End Sub
