@@ -116,5 +116,71 @@ Dim RREs As Long
     RStr = "C:\Program Files\WinRAR\WinRAR.exe  a -ep1 " & Mypath & Format(Date, "YYMMDD") & "\" & Subname & ".rar" & " " & Mypath & Format(Date, "YYMMDD") & "\" & Subname & "\*.*"
     RREs = Shell(RStr, vbHide)
 End Sub
-
+Sub 保越分割PDF()
+    Dim NewDocName$, SubName$, CoName$, ContrNum$, tPage%, MyPath$, i%, RarStr$, RarRlt&, EplRlt&
+    Dim SrcDoc As Document, NewDoc As Document
+    Dim SrcRng As Range, NewRng As Range 
+    Application.ScreenUpdating = False
+    Set SrcDoc = ActiveDocument
+    tPage = SrcDoc.BuiltInDocumentProperties(wdPropertyPages)
+    ActiveDocument.Sections(1).Range.Select  
+    Do Until (Selection.Information(wdActiveEndPageNumber) = tPage)
+        If Selection.Find.Execute("商品明细") Then
+            Application.Run "RestartNumbering"
+        End If
+        Selection.Range.Next(Unit:=wdSection, Count:=1).Select
+        DoEvents
+    Loop
+    If Selection.Find.Execute("商品明细") Then Application.Run "RestartNumbering"
+    Beep
+    MyPath = "D:\Contracts\保越\"
+    SubName = Trim(Split(SrcDoc.Name, ".")(0))
+    SubName = Replace(SubName, Chr(10), "", , , vbBinaryCompare)
+    SubName = Replace(SubName, Chr(13), "", , , vbBinaryCompare)
+    SubName = Replace(SubName, Chr(32), "", , , vbBinaryCompare)  
+    If Dir(MyPath & Format(Date, "YYMMDD"), vbDirectory) <> "" Then
+    Else
+        MkDir MyPath & Format(Date, "YYMMDD")
+    End If
+    If Dir(MyPath & Format(Date, "YYMMDD") & "\" & SubName, vbDirectory) <> "" Then
+    Else
+        MkDir MyPath & Format(Date, "YYMMDD") & "\" & SubName
+    End If
+    Set SrcRng = SrcDoc.Content
+    SrcRng.Collapse wdCollapseStart
+    SrcRng.Select
+    For i = 1 To tPage Step 2
+        Set NewDoc = Documents.Add
+        SrcDoc.Activate
+        SrcDoc.Bookmarks("\Section").Range.Copy
+        SrcDoc.Windows(1).Activate
+        Application.Browser.Target = wdBrowseSection
+        Application.Browser.Next
+        NewDoc.Activate
+        NewDoc.Windows(1).Selection.Paste
+        Set NewRng = NewDoc.Content
+        ContrNum = Trim(Replace(NewRng.Paragraphs(2).Range.Text, "编号：", ""))
+        CoName = Trim(Replace(NewRng.Paragraphs(8).Range.Text, "买方：", ""))
+        NewDocName = MyPath & Format(Date, "YYMMDD") & "\" & SubName & "\" & CoName & "-" & ContrNum & ".pdf"
+        NewDocName = Replace(NewDocName, Chr(10), "", , , vbBinaryCompare)
+        NewDocName = Replace(NewDocName, Chr(13), "", , , vbBinaryCompare)
+        NewDocName = Replace(NewDocName, Chr(32), "", , , vbBinaryCompare)
+        With NewDoc
+            .Content.Characters.Last.Previous.Delete
+            .SaveAs FileName:=NewDocName, FileFormat:=wdFormatPDF
+            .Close wdDoNotSaveChanges
+        End With
+        Set NewRng = Nothing
+    Next i
+    Beep
+    Set NewDoc = Nothing
+    Set SrcRng = Nothing
+    SrcDoc.Close wdDoNotSaveChanges
+    Set SrcDoc = Nothing
+    Application.ScreenUpdating = True  
+    RarStr = "C:\Program Files\WinRAR\WinRAR.exe  a -ep1 " & MyPath & Format(Date, "YYMMDD") & "\" & SubName & ".rar" & " " & MyPath & Format(Date, "YYMMDD") & "\" & SubName & "\*.*"
+    RarRlt = Shell(RarStr, vbHide)
+    EplRlt = Shell("explorer.exe /n, /e," & MyPath & Format(Date, "YYMMDD") & "\" & SubName, vbNormalFocus)
+    If Word.Application.Windows.Count = 0 Then Application.Quit
+End Sub
 
